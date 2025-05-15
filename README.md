@@ -28,21 +28,12 @@ Web AES Crypto là một ứng dụng web cho phép người dùng mã hóa và 
    cd web-aes-crypto
    ```
 
-3. Tạo và kích hoạt môi trường ảo (khuyến nghị):
-   ```
-   python -m venv venv
-   # Trên Windows
-   venv\Scripts\activate
-   # Trên macOS/Linux
-   source venv/bin/activate
-   ```
-
-4. Cài đặt các dependencies:
+3. Cài đặt các dependencies:
    ```
    pip install -r requirements.txt
    ```
 
-5. Chạy ứng dụng:
+4. Chạy ứng dụng:
    ```
    flask run
    ```
@@ -99,9 +90,8 @@ Link dự án: [https://github.com/hung981vpp/web-aes-crypto](https://github.com
 
 - 🌶️ [Flask](https://flask.palletsprojects.com/)
 - 🎨 [Bootstrap](https://getbootstrap.com/)
-- 🔐 [PyCryptodome](https://pycryptodome.readthedocs.io/) (nếu được sử dụng)
-- 🛡️ [Python Cryptography](https://cryptography.io/) (nếu được sử dụng)
-
+- 🔐 [PyCryptodome](https://pycryptodome.readthedocs.io/)
+- 🛡️ [Python Cryptography](https://cryptography.io/) 
 ## 📂 Cấu trúc dự án
 
 ```
@@ -114,8 +104,7 @@ web-aes-crypto/
 │   └── decrypt.html      # Trang giải mã
 │
 ├── static/               # Thư mục chứa các file tĩnh
-│   ├── css/              # Stylesheet và Bootstrap
-│   └── js/               # JavaScript và xử lý mã hóa
+│   └── css/              # Stylesheet và Bootstrap
 │
 ├── modules/              # Các module chức năng
 │   └── crypto.py         # Module xử lý mã hóa/giải mã AES
