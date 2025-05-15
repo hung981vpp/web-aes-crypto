@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow hover-shadow">
+            <div class="card-header bg-white py-3">
+                <h4 class="mb-0 text-center fw-bold"><i class="bi bi-key-fill text-primary me-2"></i> Thiết lập mã hóa/giải mã</h4>
+            </div>
+            <div class="card-body p-4">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show d-flex align-items-center">
+                                <i class="bi bi-{{ 'exclamation-triangle-fill' if category == 'error' else 'check-circle-fill' }} me-2"></i>
+                                <div>{{ message }}</div>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <form method="POST" enctype="multipart/form-data" id="aesForm" class="needs-validation" novalidate>
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between">
+                            <label for="file" class="form-label fw-bold">
+                                <i class="bi bi-file-earmark me-2"></i> Chọn file cần xử lý
+                            </label>
+                        </div>
+                        <div class="input-group file-group">
+                            <input class="form-control" type="file" id="file" name="file" required>
+                            <button class="btn btn-outline-secondary" type="button" id="clearFile">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        <div class="form-text text-muted d-flex align-items-center">
+                            <i class="bi bi-info-circle me-2"></i> Chọn file bạn muốn mã hóa hoặc giải mã
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between">
+                            <label for="operation" class="form-label fw-bold">
+                                <i class="bi bi-gear me-2"></i> Chọn thao tác
+                            </label>
+                        </div>
+                        <div class="btn-group w-100 shadow-sm mb-2" role="group">
+                            <input type="radio" class="btn-check" name="operation" id="encrypt" value="encrypt" autocomplete="off">
+                            <label class="btn btn-outline-primary" for="encrypt">
+                                <i class="bi bi-lock-fill"></i> Mã hóa
+                            </label>
+
+                            <input type="radio" class="btn-check" name="operation" id="decrypt" value="decrypt" autocomplete="off" checked>
+                            <label class="btn btn-outline-success" for="decrypt">
+                                <i class="bi bi-unlock-fill"></i> Giải mã
+                            </label>
+                        </div>
+                        <div class="form-text text-muted operation-description">
+                            <i class="bi bi-unlock me-2"></i> <span id="operationHint">Giải mã: Chuyển đổi file đã mã hóa về dạng ban đầu</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between">
+                            <label for="key_size" class="form-label fw-bold">
+                                <i class="bi bi-shield-lock me-2"></i> Độ dài khóa AES
+                            </label>
+                        </div>
+                        <select class="form-select" id="key_size" name="key_size" required>
+                            <option value="128" selected>AES-128 (khóa 16 byte)</option>
+                            <option value="192">AES-192 (khóa 24 byte)</option>
+                            <option value="256">AES-256 (khóa 32 byte)</option>
+                        </select>
+                        <div class="form-text text-muted d-flex align-items-center">
+                            <i class="bi bi-shield-check me-2"></i> <span id="keySizeHint">AES-128 mang lại sự cân bằng giữa bảo mật và hiệu suất</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between">
+                            <label for="key" class="form-label fw-bold">
+                                <i class="bi bi-key me-2"></i> Khóa bí mật
+                            </label>
+                        </div>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="key" name="key" 
+                                   plceholder="Nhập khóa bí mật" required>
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                <i class="bi bi-eye-fill"></i>
+                            </button>
+                        </div>
+                        <div class="key-strength-meter mt-2">
+                            <div class="meter-fill"></div>
+                        </div>
+                        <div class="form-text text-muted d-flex align-items-center">
+                            <i class="bi bi-shield-lock me-2"></i> <span id="keyHint">Khuyến nghị: Nhập ít nhất 16 ký tự đa dạng cho bảo mật tối ưu</span>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 py-3 fw-bold shadow" id="submitButton">
+                        <i class="bi bi-gear-wide-connected me-2"></i> Thực hiện
+                    </button>
+                </form>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <div class="d-flex justify-content-center align-items-center">
+                <i class="bi bi-shield-check text-success me-2 fs-5"></i>
+                <span class="text-amuted">Đảm bảo bảo mật dữ liệu của bạn với tiêu chuẩn mã hóa AES</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Key size hints
+document.getElementById('key_size').addEventListener('change', function() {
+    const size = this.value;
+    let hint = '';
+    const hintElement = document.getElementById('keySizeHint');
+    
+    if (size === '128') {
+        hint = 'AES-128 mang lại sự cân bằng giữa bảo mật và hiệu suất';
+    } else if (size === '192') {
+        hint = 'AES-192 cung cấp bảo mật cao hơn AES-128';
+    } else {
+        hint = 'AES-256 mang lại bảo mật mạnh nhất, được khuyến nghị sử dụng';
+    }
+    
+    hintElement.textContent = hint;
+});
+
+// Operation description
+document.getElementById('encrypt').addEventListener('change', function() {
+    if(this.checked) {
+        document.getElementById('operationHint').textContent = "Mã hóa: Chuyển đổi file gốc thành dạng mã hóa an toàn";
+    }
+});
+
+document.getElementById('decrypt').addEventListener('change', function() {
+    if(this.checked) {
+        document.getElementById('operationHint').textContent = "Giải mã: Chuyển đổi file đã mã hóa về dạng ban đầu";
+    }
+});
+
+// Toggle password visibility
+document.getElementById('togglePassword').addEventListener('click', function() {
+    const passwordInput = document.getElementById('key');
+    const icon = this.querySelector('i');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.classList.replace('bi-eye-fill', 'bi-eye-slash-fill');
+    } else {
+        passwordInput.type = 'password';
+        icon.classList.replace('bi-eye-slash-fill', 'bi-eye-fill');
+    }
+});
+
+// Clear file input
+document.getElementById('clearFile').addEventListener('click', function() {
+    document.getElementById('file').value = '';
+});
+
+// Key strength meter
+document.getElementById('key').addEventListener('input', function() {
+    const password = this.value;
+    const strengthMeter = document.querySelector('.key-strength-meter');
+    const meterFill = document.querySelector('.meter-fill');
+    const keyHint = document.getElementById('keyHint');
+    
+    // Remove all classes
+    strengthMeter.classList.remove('strength-weak', 'strength-fair', 'strength-good', 'strength-strong');
+    
+    if (password.length === 0) {
+        meterFill.style.width = '0%';
+        keyHint.textContent = 'Khuyến nghị: Nhập ít nhất 16 ký tự đa dạng cho bảo mật tối ưu';
+        return;
+    }
+    
+    // Calculate strength
+    let strength = 0;
+    
+    // Length check
+    if (password.length >= 8) strength += 1;
+    if (password.length >= 12) strength += 1;
+    if (password.length >= 16) strength += 1;
+    
+    // Complexity checks
+    if (/[A-Z]/.test(password)) strength += 1;
+    if (/[a-z]/.test(password)) strength += 1;
+    if (/[0-9]/.test(password)) strength += 1;
+    if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+    
+    // Assign strength level
+    if (strength < 3) {
+        strengthMeter.classList.add('strength-weak');
+        keyHint.textContent = 'Mật khẩu yếu - sử dụng ký tự hoa, thường, số và ký tự đặc biệt';
+    } else if (strength < 5) {
+        strengthMeter.classList.add('strength-fair');
+        keyHint.textContent = 'Mật khẩu trung bình - hãy thêm độ dài và đa dạng ký tự';
+    } else if (strength < 7) {
+        strengthMeter.classList.add('strength-good');
+        keyHint.textContent = 'Mật khẩu tốt - có thể tăng thêm độ dài';
+    } else {
+        strengthMeter.classList.add('strength-strong');
+        keyHint.textContent = 'Mật khẩu mạnh - bảo mật tối ưu';
+    }
+});
+
+// Form submission
+document.getElementById('aesForm').addEventListener('submit', function() {
+    const submitButton = document.getElementById('submitButton');
+    submitButton.classList.add('loading');
+    submitButton.disabled = true;
+    
+    // This is just for visual effect in the UI, the actual form submission still works
+    setTimeout(() => {
+        submitButton.classList.remove('loading');
+        submitButton.disabled = false;
+    }, 2000);
+});
+</script>
+{% endblock %}
