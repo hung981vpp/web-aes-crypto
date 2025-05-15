@@ -82,7 +82,7 @@ Dự án này được phân phối dưới giấy phép MIT. Xem file `LICENSE`
 
 ## 📞 Liên hệ
 
-Hung Nguyen - [@hung981vpp](https://github.com/hung981vpp)
+Dam Vinh Hung - [@hung981vpp](https://github.com/hung981vpp)
 
 Link dự án: [https://github.com/hung981vpp/web-aes-crypto](https://github.com/hung981vpp/web-aes-crypto)
 
